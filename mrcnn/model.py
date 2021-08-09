@@ -2274,9 +2274,10 @@ class MaskRCNN():
                 print('Re-starting from epoch %d' % self.epoch)
 
         # Directory for training logs
-        self.log_dir = os.path.join(self.model_dir, "{}{:%Y%m%dT%H%M}".format(
-            self.config.NAME.lower(), now))
+        #self.log_dir = os.path.join(self.model_dir, "{}{:%Y%m%dT%H%M}".format(
+        #    self.config.NAME.lower(), now))
         #self.log_dir = "//logdir//train"
+        self.log_dir = self.model_dir
 
         print(self.log_dir)
 
@@ -2354,7 +2355,7 @@ class MaskRCNN():
         # Callbacks
         callbacks = [
             keras.callbacks.TensorBoard(log_dir=self.log_dir,
-                                        histogram_freq=0, write_graph=True, write_images=False),
+                                        histogram_freq=1, write_graph=True, write_images=True, write_steps_per_second=True,),
             keras.callbacks.ModelCheckpoint(self.checkpoint_path,
                                             verbose=0, save_weights_only=True),
         ]
