@@ -2903,6 +2903,7 @@ class MeanAveragePrecisionCallback(Callback):
     def __init__(self, train_model: MaskRCNN, inference_model: MaskRCNN, dataset: Dataset,
                  calculate_map_at_every_X_epoch=5, dataset_limit=None,
                  verbose=1):
+        print("init")
         super().__init__()
         self.train_model = train_model
         self.inference_model = inference_model
@@ -2920,6 +2921,7 @@ class MeanAveragePrecisionCallback(Callback):
         self._verbose_print = print if verbose > 0 else lambda *a, **k: None
 
     def on_epoch_end(self, epoch, logs=None):
+        print("on_epoch_end")
 
         if epoch > 2 and (epoch+1)%self.calculate_map_at_every_X_epoch == 0:
             self._verbose_print("Calculating mAP...")
@@ -2936,6 +2938,7 @@ class MeanAveragePrecisionCallback(Callback):
         super().on_epoch_end(epoch, logs)
 
     def _load_weights_for_model(self):
+        print("_load_weights_for_model")
         last_weights_path = self.train_model.find_last()
         self._verbose_print("Loaded weights for the inference model (last checkpoint of the train model): {0}".format(
             last_weights_path))
@@ -2943,6 +2946,7 @@ class MeanAveragePrecisionCallback(Callback):
                                           by_name=True)
 
     def _calculate_mean_average_precision(self):
+        print("calculate_mean_average_precision")
         mAPs = []
 
         # Use a random subset of the data when a limit is defined
