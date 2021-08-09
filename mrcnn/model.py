@@ -2923,6 +2923,7 @@ class MeanAveragePrecisionCallback(Callback):
         if dataset_limit is not None:
             self.dataset_limit = dataset_limit
         self.dataset_image_ids = self.dataset.image_ids.copy()
+        print(self.dataset_image_ids)
 
         print(inference_model.config.BATCH_SIZE)
         if int(inference_model.config.BATCH_SIZE) != 1:
@@ -2968,9 +2969,13 @@ class MeanAveragePrecisionCallback(Callback):
             molded_images = np.expand_dims(mold_image(image, self.inference_model.config), 0)
             results = self.inference_model.detect(molded_images, verbose=0)
             r = results[0]
+            print("result")
+            print(r)
             # Compute mAP - VOC uses IoU 0.5
             AP, _, _, _ = utils.compute_ap(gt_bbox, gt_class_id, gt_mask, r["rois"],
                                            r["class_ids"], r["scores"], r['masks'])
+            print("ap")
+            print(AP)
             mAPs.append(AP)
 
         return np.array(mAPs)
