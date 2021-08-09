@@ -2357,12 +2357,22 @@ class MaskRCNN():
             os.makedirs(self.log_dir)
 
         # Callbacks
-        callbacks = [
-            keras.callbacks.TensorBoard(log_dir=self.log_dir,
-                                        histogram_freq=1, write_graph=True, write_images=True),
-            keras.callbacks.ModelCheckpoint(self.checkpoint_path,
-                                            verbose=0, save_weights_only=True),
-        ]
+
+        # The callback to save the model checkpoint
+        callbacks = [keras.callbacks.ModelCheckpoint(self.checkpoint_path, verbose=0, save_weights_only=True)]
+
+        # Add custom callbacks to the list
+        if custom_callbacks:
+            callbacks += custom_callbacks
+
+        # The tensorboard callback is last so that any metric logged by the custom callbacks would be picked up as part of the same epoch
+        callbacks.append(keras.callbacks.TensorBoard(log_dir=self.log_dir, histogram_freq=0, write_graph=True, write_images=False))
+        #callbacks = [
+        #    keras.callbacks.TensorBoard(log_dir=self.log_dir,
+        #                                histogram_freq=1, write_graph=True, write_images=True),
+        #    keras.callbacks.ModelCheckpoint(self.checkpoint_path,
+        #                                    verbose=0, save_weights_only=True),
+        #]
 
         # Add custom callbacks to the list
         if custom_callbacks:
