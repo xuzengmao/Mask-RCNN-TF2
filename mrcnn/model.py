@@ -2939,7 +2939,11 @@ class MeanAveragePrecisionCallback(Callback):
             self._load_weights_for_model()
 
             mAPs = self._calculate_mean_average_precision()
+            print("mAPs")
+            print(mAPs)
             mAP = np.mean(mAPs)
+            print("mAP")
+            print(mAP)
 
             if logs is not None:
                 logs["val_mean_average_precision"] = mAP
