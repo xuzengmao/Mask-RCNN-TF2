@@ -2973,8 +2973,21 @@ class MeanAveragePrecisionCallback(Callback):
             molded_images = np.expand_dims(mold_image(image, self.inference_model.config), 0)
             results = self.inference_model.detect(molded_images, verbose=0)
             r = results[0]
-            print("result")
-            print(r)
+            print("gt_bbox")
+            print(gt_bbox)
+            print("gt_class_id")
+            print(gt_class_id)
+            print("gt_mask")
+            print(gt_mask)
+            print("rois")
+            print(r["rois"])
+            print("class_id")
+            print(r["class_id"])
+            print("scores")
+            print(r["scores"])
+            print("masks")
+            print(r["masks"])
+
             # Compute mAP - VOC uses IoU 0.5
             AP, _, _, _ = utils.compute_ap(gt_bbox, gt_class_id, gt_mask, r["rois"],
                                            r["class_ids"], r["scores"], r['masks'])
