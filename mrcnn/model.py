@@ -2913,7 +2913,8 @@ class MeanAveragePrecisionCallback(Callback):
             self.dataset_limit = dataset_limit
         self.dataset_image_ids = self.dataset.image_ids.copy()
 
-        if inference_model.config.BATCH_SIZE != 1:
+        print(inference_model.config.BATCH_SIZE)
+        if int(inference_model.config.BATCH_SIZE) != 1:
             raise ValueError("This callback only works with the bacth size of 1")
 
         self._verbose_print = print if verbose > 0 else lambda *a, **k: None
