@@ -2199,7 +2199,8 @@ class MaskRCNN():
         # Compile
         self.keras_model.compile(
             optimizer=optimizer,
-            loss=[None] * len(self.keras_model.outputs))
+            loss=[None] * len(self.keras_model.outputs),
+            metrics=['accuracy',  tf.keras.metrics.Precision(), tf.keras.metrics.Recall(), tf.keras.metrics.TruePositives(), tf.keras.metrics.FalsePositives(), tf.keras.metrics.FalseNegatives(), tf.keras.metrics.PrecisionAtRecall()])
 
         # Add metrics for losses
         for name in loss_names:
@@ -2910,13 +2911,14 @@ def denorm_boxes_graph(boxes, shape):
 ############################################################
 
 class MeanAveragePrecisionCallback(Callback):
-    def __init__(self, train_model: MaskRCNN, inference_model: MaskRCNN, dataset: Dataset,
+    def __init__(self, train_model: MaskRCNN, inference_model: MaskRCNN, train_dataset: Dataset, val_dataset: Dataset,
                  calculate_map_at_every_X_epoch=5, dataset_limit=None,
                  verbose=1):
         super().__init__()
         self.train_model = train_model
         self.inference_model = inference_model
-        self.dataset = dataset
+        self.train_dataset = train_dataset
+        self.val_dataset = val_dataset
         self.calculate_map_at_every_X_epoch = calculate_map_at_every_X_epoch
         self.dataset_limit = len(self.dataset.image_ids)
         if dataset_limit is not None:
@@ -2934,7 +2936,23 @@ class MeanAveragePrecisionCallback(Callback):
             self._verbose_print("Calculating mAP...")
             self._load_weights_for_model()
 
-            mAPs, TPs, FPs, FNs, totals = self._calculate_mean_average_precision()
+            mAPs, TPs, FPs, FNs, totals = self._calculate_mean_average_precision(self.train_dataset)
+            mAP = np.mean(mAPs)
+            TP = np.sum(TPs)
+            FP = np.sum(FPs)
+            FN = np.sum(FNs)
+            total = np.sum(totals)
+
+            if logs is not None:
+                logs["train_mean_average_precision"] = mAP
+                logs["train_TP"] = TP
+                logs["train_FP"] = FP
+                logs["train_FN"] = FN
+                logs["train_total"] = total
+
+            self._verbose_print("Epoch {0} train results ->  map: {1} TP: {2} FP: {3} FN: {4} total: {5}".format(epoch+1, mAP, TP, FP, FN, total))
+
+            mAPs, TPs, FPs, FNs, totals = self._calculate_mean_average_precision(self.val_dataset)
             mAP = np.mean(mAPs)
             TP = np.sum(TPs)
             FP = np.sum(FPs)
@@ -2948,7 +2966,7 @@ class MeanAveragePrecisionCallback(Callback):
                 logs["val_FN"] = FN
                 logs["val_total"] = total
 
-            self._verbose_print("Epoch {0} results ->  map: {1} TP: {2} FP: {3} FN: {4} total: {5}".format(epoch+1, mAP, TP, FP, FN, total))
+            self._verbose_print("Epoch {0} val results ->  map: {1} TP: {2} FP: {3} FN: {4} total: {5}".format(epoch+1, mAP, TP, FP, FN, total))
 
         super().on_epoch_end(epoch, logs)
 
@@ -2959,7 +2977,7 @@ class MeanAveragePrecisionCallback(Callback):
         self.inference_model.load_weights(last_weights_path,
                                           by_name=True)
 
-    def _calculate_mean_average_precision(self):
+    def _calculate_mean_average_precision(self, dataset):
         mAPs = []
         TPs = []
         FPs = []
@@ -2967,10 +2985,11 @@ class MeanAveragePrecisionCallback(Callback):
         totals = []
 
         # Use a random subset of the data when a limit is defined
-        np.random.shuffle(self.dataset_image_ids)
+        np.random.shuffle(dataset)
+        dataset_limit = len(dataset.image_ids)
 
-        for image_id in self.dataset_image_ids[:self.dataset_limit]:
-            image, image_meta, gt_class_id, gt_bbox, gt_mask = load_image_gt(self.dataset, self.inference_model.config,
+        for image_id in dataset[:dataset_limit]:
+            image, image_meta, gt_class_id, gt_bbox, gt_mask = load_image_gt(dataset, self.inference_model.config,
                                                                              image_id, use_mini_mask=False)
             molded_images = np.expand_dims(mold_image(image, self.inference_model.config), 0)
             results = self.inference_model.detect(molded_images, verbose=0)
@@ -2988,7 +3007,7 @@ class MeanAveragePrecisionCallback(Callback):
             FNs.append(FN)
             totals.append(total)
 
-            self._verbose_print("ImageId: " + str(image_id) + " AP: " + str(AP) + " TP: " + str(TP) + " FP: " + str(FP) + " FN: " + str(FN) + " total: " + str(total))
+            #self._verbose_print("ImageId: " + str(image_id) + " AP: " + str(AP) + " TP: " + str(TP) + " FP: " + str(FP) + " FN: " + str(FN) + " total: " + str(total))
 
         return np.array(mAPs), np.array(TPs), np.array(FPs), np.array(FNs), np.array(totals)
 
