@@ -732,9 +732,21 @@ def compute_ap(gt_boxes, gt_class_ids, gt_masks,
         pred_boxes, pred_class_ids, pred_scores, pred_masks,
         iou_threshold)
 
+    print("gt_match")
+    print(gt_match)
+    print("pred_match")
+    print(pred_match)
+    print("overlaps")
+    print(overlaps)
+
     # Compute precision and recall at each prediction box step
     precisions = np.cumsum(pred_match > -1) / (np.arange(len(pred_match)) + 1)
     recalls = np.cumsum(pred_match > -1).astype(np.float32) / len(gt_match)
+
+    print("precisions")
+    print(precisions)
+    print("recalls")
+    print(recalls)
 
     # Pad with start and end values to simplify the math
     precisions = np.concatenate([[1], precisions, [0]])
