@@ -723,8 +723,6 @@ def compute_ap(gt_boxes, gt_class_ids, gt_masks,
     recalls: List of recall values at different class score thresholds.
     overlaps: [pred_boxes, gt_boxes] IoU overlaps.
     """
-    if len(gt_boxes) == 0:
-        return None, None, None, None
 
     # Get matches and overlaps
     gt_match, pred_match, overlaps = compute_matches(
@@ -732,21 +730,18 @@ def compute_ap(gt_boxes, gt_class_ids, gt_masks,
         pred_boxes, pred_class_ids, pred_scores, pred_masks,
         iou_threshold)
 
-    print("gt_match")
-    print(gt_match)
-    print("pred_match")
-    print(pred_match)
-    print("overlaps")
-    print(overlaps)
+    TP = np.cumsum(pred_match > -1)
+    FP = np.cumsum(pred_match == -1)
+    FN = np.cumsum(gt_match == -1)
+    total = len(gt_match)
+
+    
+    if len(gt_boxes) == 0:
+        return None, None, None, None, TP, FP, FN, total
 
     # Compute precision and recall at each prediction box step
     precisions = np.cumsum(pred_match > -1) / (np.arange(len(pred_match)) + 1)
     recalls = np.cumsum(pred_match > -1).astype(np.float32) / len(gt_match)
-
-    print("precisions")
-    print(precisions)
-    print("recalls")
-    print(recalls)
 
     # Pad with start and end values to simplify the math
     precisions = np.concatenate([[1], precisions, [0]])
@@ -763,7 +758,7 @@ def compute_ap(gt_boxes, gt_class_ids, gt_masks,
     mAP = np.sum((recalls[indices] - recalls[indices - 1]) *
                  precisions[indices])
 
-    return mAP, precisions, recalls, overlaps
+    return mAP, precisions, recalls, overlaps, TP, FP, FN, total
 
 
 def compute_ap_range(gt_box, gt_class_id, gt_mask,

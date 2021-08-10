@@ -2913,7 +2913,6 @@ class MeanAveragePrecisionCallback(Callback):
     def __init__(self, train_model: MaskRCNN, inference_model: MaskRCNN, dataset: Dataset,
                  calculate_map_at_every_X_epoch=5, dataset_limit=None,
                  verbose=1):
-        print("init")
         super().__init__()
         self.train_model = train_model
         self.inference_model = inference_model
@@ -2923,37 +2922,37 @@ class MeanAveragePrecisionCallback(Callback):
         if dataset_limit is not None:
             self.dataset_limit = dataset_limit
         self.dataset_image_ids = self.dataset.image_ids.copy()
-        print(self.dataset_image_ids)
 
-        print(inference_model.config.BATCH_SIZE)
         if int(inference_model.config.BATCH_SIZE) != 1:
             raise ValueError("This callback only works with the bacth size of 1")
 
         self._verbose_print = print if verbose > 0 else lambda *a, **k: None
 
     def on_epoch_end(self, epoch, logs=None):
-        print("on_epoch_end")
 
         if epoch > 2 and (epoch+1)%self.calculate_map_at_every_X_epoch == 0:
             self._verbose_print("Calculating mAP...")
             self._load_weights_for_model()
 
-            mAPs = self._calculate_mean_average_precision()
-            print("mAPs")
-            print(mAPs)
+            mAPs, TPs, FPs, FNs, totals = self._calculate_mean_average_precision()
             mAP = np.mean(mAPs)
-            print("mAP")
-            print(mAP)
+            TP = np.sum(TPs)
+            FP = np.sum(FPs)
+            FN = np.sum(FNs)
+            total = np.sum(totals)
 
             if logs is not None:
                 logs["val_mean_average_precision"] = mAP
+                logs["val_TP"] = TP
+                logs["val_FP"] = FP
+                logs["val_FN"] = FN
+                logs["val_total"] = total
 
-            self._verbose_print("mAP at epoch {0} is: {1}".format(epoch+1, mAP))
+            self._verbose_print("Epoch {0} results ->  map: {1} TP: {2} FP: {3} FN: {4} total: {5}".format(epoch+1, mAP, TP, FP, FN, total))
 
         super().on_epoch_end(epoch, logs)
 
     def _load_weights_for_model(self):
-        print("_load_weights_for_model")
         last_weights_path = self.train_model.find_last()
         self._verbose_print("Loaded weights for the inference model (last checkpoint of the train model): {0}".format(
             last_weights_path))
@@ -2961,8 +2960,11 @@ class MeanAveragePrecisionCallback(Callback):
                                           by_name=True)
 
     def _calculate_mean_average_precision(self):
-        print("calculate_mean_average_precision")
         mAPs = []
+        TPs = []
+        FPs = []
+        FNs = []
+        totals = []
 
         # Use a random subset of the data when a limit is defined
         np.random.shuffle(self.dataset_image_ids)
@@ -2975,13 +2977,18 @@ class MeanAveragePrecisionCallback(Callback):
             r = results[0]
 
             # Compute mAP - VOC uses IoU 0.5
-            AP, _, _, _ = utils.compute_ap(gt_bbox, gt_class_id, gt_mask, r["rois"],
-                                           r["class_ids"], r["scores"], r['masks'])
-            print("ap")
-            print(AP)
+            AP, _, _, _, TP, FP, FN, total = utils.compute_ap(gt_bbox, gt_class_id, gt_mask, r["rois"],
+                                                                r["class_ids"], r["scores"], r['masks'])
+
             if (AP != None):
                 mAPs.append(AP)
-                print("added")
 
-        return np.array(mAPs)
+            TPs.append(TP)
+            FPs.append(FP)
+            FNs.append(FN)
+            totals.append(total)
+
+            self._verbose_print("ImageId: " + str(image_id) + " AP: " + str(AP) + " TP: " + str(TP) + " FP: " + str(FP) + " FN: " + str(FN) + " total: " + str(total))
+
+        return np.array(mAPs), np.array(TPs), np.array(FPs), np.array(FNs), np.array(totals)
 
