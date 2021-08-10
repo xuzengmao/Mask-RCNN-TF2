@@ -2920,10 +2920,6 @@ class MeanAveragePrecisionCallback(Callback):
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
         self.calculate_map_at_every_X_epoch = calculate_map_at_every_X_epoch
-        self.dataset_limit = len(self.dataset.image_ids)
-        if dataset_limit is not None:
-            self.dataset_limit = dataset_limit
-        self.dataset_image_ids = self.dataset.image_ids.copy()
 
         if int(inference_model.config.BATCH_SIZE) != 1:
             raise ValueError("This callback only works with the bacth size of 1")
@@ -2988,7 +2984,7 @@ class MeanAveragePrecisionCallback(Callback):
         np.random.shuffle(dataset)
         dataset_limit = len(dataset.image_ids)
 
-        for image_id in dataset[:dataset_limit]:
+        for image_id in dataset.image_ids[:dataset_limit]:
             image, image_meta, gt_class_id, gt_bbox, gt_mask = load_image_gt(dataset, self.inference_model.config,
                                                                              image_id, use_mini_mask=False)
             molded_images = np.expand_dims(mold_image(image, self.inference_model.config), 0)
