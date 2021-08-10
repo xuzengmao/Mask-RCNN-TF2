@@ -2993,7 +2993,9 @@ class MeanAveragePrecisionCallback(Callback):
                                            r["class_ids"], r["scores"], r['masks'])
             print("ap")
             print(AP)
-            mAPs.append(AP)
+            if (AP != None):
+                mAPs.append(AP)
+                print("added")
 
         return np.array(mAPs)
 

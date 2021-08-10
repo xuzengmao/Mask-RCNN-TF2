@@ -723,6 +723,9 @@ def compute_ap(gt_boxes, gt_class_ids, gt_masks,
     recalls: List of recall values at different class score thresholds.
     overlaps: [pred_boxes, gt_boxes] IoU overlaps.
     """
+    if len(gt_boxes) == 0:
+        return None, None, None, None
+
     # Get matches and overlaps
     gt_match, pred_match, overlaps = compute_matches(
         gt_boxes, gt_class_ids, gt_masks,
@@ -734,7 +737,7 @@ def compute_ap(gt_boxes, gt_class_ids, gt_masks,
     recalls = np.cumsum(pred_match > -1).astype(np.float32) / len(gt_match)
 
     # Pad with start and end values to simplify the math
-    precisions = np.concatenate([[0], precisions, [0]])
+    precisions = np.concatenate([[1], precisions, [0]])
     recalls = np.concatenate([[0], recalls, [1]])
 
     # Ensure precision values decrease but don't increase. This way, the
