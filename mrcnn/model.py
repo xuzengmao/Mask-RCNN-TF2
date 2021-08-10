@@ -2200,7 +2200,7 @@ class MaskRCNN():
         self.keras_model.compile(
             optimizer=optimizer,
             loss=[None] * len(self.keras_model.outputs),
-            metrics=['accuracy',  tf.keras.metrics.Precision(), tf.keras.metrics.Recall(), tf.keras.metrics.TruePositives(), tf.keras.metrics.FalsePositives(), tf.keras.metrics.FalseNegatives(), tf.keras.metrics.PrecisionAtRecall()])
+            metrics=['accuracy'])
 
         # Add metrics for losses
         for name in loss_names:
