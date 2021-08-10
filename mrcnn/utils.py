@@ -730,9 +730,9 @@ def compute_ap(gt_boxes, gt_class_ids, gt_masks,
         pred_boxes, pred_class_ids, pred_scores, pred_masks,
         iou_threshold)
 
-    TP = np.cumsum(pred_match > -1)
-    FP = np.cumsum(pred_match == -1)
-    FN = np.cumsum(gt_match == -1)
+    TP = np.sum(pred_match > -1)
+    FP = np.sum(pred_match == -1)
+    FN = np.sum(gt_match == -1)
     total = len(gt_match)
 
     
