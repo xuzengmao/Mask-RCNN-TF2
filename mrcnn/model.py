@@ -2913,6 +2913,7 @@ class MeanAveragePrecisionCallback(Callback):
         self.inference_model = inference_model
         self.val_dataset = val_dataset
         self.calculate_map_at_every_X_epoch = calculate_map_at_every_X_epoch
+        self.current = 0
 
         if int(inference_model.config.BATCH_SIZE) != 1:
             raise ValueError("This callback only works with the bacth size of 1")
@@ -2920,8 +2921,8 @@ class MeanAveragePrecisionCallback(Callback):
         self._verbose_print = print if verbose > 0 else lambda *a, **k: None
 
     def on_epoch_end(self, epoch, logs=None):
-
-        if epoch > 2 and (epoch+1)%self.calculate_map_at_every_X_epoch == 0:
+        if epoch > 2 and (epoch+1)%self.calculate_map_at_every_X_epoch == 0 and self.current != epoch:
+            self.current = epoch
             self._verbose_print("Calculating mAP...")
             self._load_weights_for_model()
 
@@ -2931,11 +2932,9 @@ class MeanAveragePrecisionCallback(Callback):
             FP = np.sum(FPs)
             FN = np.sum(FNs)
             total = np.sum(totals)
-            precision = TP/TP+FP
-            recall = TP/TP+FN
+            precision = TP/(TP+FP)
+            recall = TP/(TP+FN)
             F1 = 2*precision*recall/(precision+recall)
-
-
 
             if logs is not None:
                 logs["val_mean_average_precision"] = mAP
