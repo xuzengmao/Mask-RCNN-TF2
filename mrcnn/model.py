@@ -2283,8 +2283,6 @@ class MaskRCNN():
         #self.log_dir = "//logdir//train"
         #self.log_dir = self.model_dir
 
-        print(self.log_dir)
-
         # Path to save after each epoch. Include placeholders that get filled by Keras.
         self.checkpoint_path = os.path.join(self.log_dir, "mask_rcnn_{}_*epoch*.h5".format(
             self.config.NAME.lower()))
@@ -2350,10 +2348,7 @@ class MaskRCNN():
                                        batch_size=self.config.BATCH_SIZE)
 
         # Create log_dir if it does not exist
-        print("before_create")
         if not os.path.exists(self.log_dir):
-            print(self.log_dir)
-            print("after_create")
             os.makedirs(self.log_dir)
 
         # Callbacks
@@ -2910,13 +2905,12 @@ def denorm_boxes_graph(boxes, shape):
 ############################################################
 
 class MeanAveragePrecisionCallback(Callback):
-    def __init__(self, train_model: MaskRCNN, inference_model: MaskRCNN, train_dataset: Dataset, val_dataset: Dataset,
-                 calculate_map_at_every_X_epoch=5,
-                 verbose=1):
+    def __init__(self, train_model: MaskRCNN, inference_model: MaskRCNN, val_dataset: Dataset,
+                calculate_map_at_every_X_epoch=5,
+                verbose=1):
         super().__init__()
         self.train_model = train_model
         self.inference_model = inference_model
-        self.train_dataset = train_dataset
         self.val_dataset = val_dataset
         self.calculate_map_at_every_X_epoch = calculate_map_at_every_X_epoch
 
@@ -2930,22 +2924,6 @@ class MeanAveragePrecisionCallback(Callback):
         if epoch > 2 and (epoch+1)%self.calculate_map_at_every_X_epoch == 0:
             self._verbose_print("Calculating mAP...")
             self._load_weights_for_model()
-
-            mAPs, TPs, FPs, FNs, totals = self._calculate_mean_average_precision(self.train_dataset)
-            mAP = np.mean(mAPs)
-            TP = np.sum(TPs)
-            FP = np.sum(FPs)
-            FN = np.sum(FNs)
-            total = np.sum(totals)
-
-            if logs is not None:
-                logs["train_mean_average_precision"] = mAP
-                logs["train_TP"] = TP
-                logs["train_FP"] = FP
-                logs["train_FN"] = FN
-                logs["train_total"] = total
-
-            self._verbose_print("Epoch {0} train results ->  map: {1} TP: {2} FP: {3} FN: {4} total: {5}".format(epoch+1, mAP, TP, FP, FN, total))
 
             mAPs, TPs, FPs, FNs, totals = self._calculate_mean_average_precision(self.val_dataset)
             mAP = np.mean(mAPs)
