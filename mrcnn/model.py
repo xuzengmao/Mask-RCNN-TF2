@@ -2912,7 +2912,7 @@ def denorm_boxes_graph(boxes, shape):
 
 class MeanAveragePrecisionCallback(Callback):
     def __init__(self, train_model: MaskRCNN, inference_model: MaskRCNN, train_dataset: Dataset, val_dataset: Dataset,
-                 calculate_map_at_every_X_epoch=5, dataset_limit=None,
+                 calculate_map_at_every_X_epoch=5,
                  verbose=1):
         super().__init__()
         self.train_model = train_model
@@ -2973,15 +2973,13 @@ class MeanAveragePrecisionCallback(Callback):
         self.inference_model.load_weights(last_weights_path,
                                           by_name=True)
 
-    def _calculate_mean_average_precision(self, dataset):
+    def _calculate_mean_average_precision(self, dataset: Dataset):
         mAPs = []
         TPs = []
         FPs = []
         FNs = []
         totals = []
 
-        # Use a random subset of the data when a limit is defined
-        np.random.shuffle(dataset)
         dataset_limit = len(dataset.image_ids)
 
         for image_id in dataset.image_ids[:dataset_limit]:
