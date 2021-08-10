@@ -2931,6 +2931,11 @@ class MeanAveragePrecisionCallback(Callback):
             FP = np.sum(FPs)
             FN = np.sum(FNs)
             total = np.sum(totals)
+            precision = TP/TP+FP
+            recall = TP/TP+FN
+            F1 = 2*precision*recall/(precision+recall)
+
+
 
             if logs is not None:
                 logs["val_mean_average_precision"] = mAP
@@ -2938,8 +2943,11 @@ class MeanAveragePrecisionCallback(Callback):
                 logs["val_FP"] = FP
                 logs["val_FN"] = FN
                 logs["val_total"] = total
+                logs["val_precision"] = precision
+                logs["val_recall"] = recall
+                logs["val_F1"] = F1
 
-            self._verbose_print("Epoch {0} val results ->  map: {1} TP: {2} FP: {3} FN: {4} total: {5}".format(epoch+1, mAP, TP, FP, FN, total))
+            self._verbose_print("Epoch {0} val results ->  map: {1} TP: {2} FP: {3} FN: {4} total: {5} precision: {6} recall: {7} F1: {8}".format(epoch+1, mAP, TP, FP, FN, total, precision, recall, F1))
 
         super().on_epoch_end(epoch, logs)
 
